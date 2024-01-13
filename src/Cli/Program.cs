@@ -7,7 +7,8 @@ namespace Cli
 {
     [HelpOption(Inherited = true)]
     [Command(Description = "Youtube download tools"),
-    Subcommand(typeof(CmdVideo))]
+    Subcommand(typeof(CmdVideo)),
+    Subcommand(typeof(CmdPlaylist))]
     internal class Program
     {
         public static string DownloadDir { get; } = "downloads";

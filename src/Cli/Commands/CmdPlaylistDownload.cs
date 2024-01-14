@@ -1,9 +1,11 @@
 ﻿using Cli.Models;
+using Cli.Services;
 using HtmlAgilityPack;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Cli.Commands
@@ -15,7 +17,7 @@ namespace Cli.Commands
         [Option(Description = "Youtube playlist url", ShortName = "u")]
         public string Url { get; set; }
 
-        public void OnExecute(IConsole console)
+        public void OnExecute(IConsole console, ICommandService commandService)
         {
             var log = new StringBuilder();
 
@@ -62,10 +64,38 @@ namespace Cli.Commands
                                          LengthSeconds = n.playlistVideoRenderer.lengthSeconds,
                                          Views = n.playlistVideoRenderer.videoInfo.runs[0].text,
                                          IsPlayable = n.playlistVideoRenderer.isPlayable
-                                     });
+                                     }).ToList();
 
                 var playlistJson = JsonConvert.SerializeObject(playlist, Formatting.Indented);
                 File.WriteAllText(Path.Combine(dir, "playlist.json"), playlistJson);
+
+                if (playlist.Count > 0)
+                {
+                    var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+                    foreach (var p in playlist)
+                    {
+                        var url = $"https://www.youtube.com/watch?v={p.VideoId}";
+
+                        var command = $"./yt-dlp_linux --paths {dir} {url}";
+
+                        if (isWindows)
+                        {
+                            command = $"./yt-dlp --paths {dir} {url}";
+                        }
+
+                        var (code, message) = commandService.ExecuteCommand(command);
+                        log.Append(message);
+
+                        if (code != 0)
+                        {
+                            log.AppendLine("Download failed");
+                            break;
+                        }
+                    }
+
+                    log.AppendLine("Download success");
+                }
             }
             catch (Exception ex)
             {

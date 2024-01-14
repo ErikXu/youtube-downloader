@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Cli.Commands
 {
-    [Command("download", Description = "Download Youtube video")]
+    [Command("download", Description = "Download Youtube video, eg: ytdl video download -u https://www.youtube.com/watch?v=xxxxxx")]
     internal class CmdVideoDownload
     {
         [Required]
@@ -58,7 +58,12 @@ namespace Cli.Commands
             }
             catch (Exception ex)
             {
-                log.Append(ex.Message);
+                console.WriteLine(ex.Message);
+                console.WriteLine(ex.StackTrace);
+                console.WriteLine("Download failed");
+
+                log.AppendLine(ex.Message);
+                log.AppendLine(ex.StackTrace);
                 log.AppendLine("Download failed");
             }
 
